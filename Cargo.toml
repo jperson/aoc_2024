@@ -4,5 +4,5 @@ resolver = "2"
 members = [
     "tinyparse",
     "utils",
-    "day1", "day2",
+    "day1", "day2", "day3",
 ]
