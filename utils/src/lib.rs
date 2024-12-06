@@ -43,6 +43,33 @@ pub fn remove_ith<T: Clone>(vs: &Vec<T>) -> Vec<Vec<T>> {
         .collect::<Vec<_>>()
 }
 
+struct Grid<'g, T> {
+    g: &'g Vec<Vec<T>>,
+    width: i32,
+    height: i32,
+}
+
+impl<'g, T> Grid<'g, T>
+where
+    T: Copy,
+{
+    pub fn new(g: &'g Vec<Vec<T>>) -> Self {
+        Self {
+            g,
+            width: g[0].len() as i32,
+            height: g.len() as i32,
+        }
+    }
+
+    fn get(self, x: i32, y: i32) -> Option<T> {
+        if x >= 0 && x < self.width && y >= 0 && y < self.height {
+            Some(self.g[y as usize][x as usize])
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
