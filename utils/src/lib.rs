@@ -61,13 +61,24 @@ where
         }
     }
 
-    fn get(self, x: i32, y: i32) -> Option<T> {
+    fn at(&self, x: i32, y: i32) -> Option<T> {
         if x >= 0 && x < self.width && y >= 0 && y < self.height {
             Some(self.g[y as usize][x as usize])
         } else {
             None
         }
     }
+
+    fn at_unsafe(&self, x: i32, y: i32) -> T {
+        self.g[y as usize][x as usize]
+    }
+
+    fn row(&self, i: i32) -> Option<&[T]> {
+        Some(&self.g[i as usize][..])
+    }
+
+    // fn col(&self, i: i32) -> Option<&[T]> {
+    // }
 }
 
 #[cfg(test)]
@@ -123,5 +134,13 @@ mod tests {
         let result = remove_ith(&vs);
 
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_grid() {
+        let g: Vec<Vec<i32>> = vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]];
+        let g: Grid<i32> = Grid::<i32>::new(&g);
+        assert_eq!(Some(5), g.at(1, 1));
+        assert_eq!(5, g.at_unsafe(1, 1));
     }
 }
