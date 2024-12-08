@@ -5,8 +5,8 @@ use std::marker::Copy;
 
 pub struct Grid<T> {
     g: Vec<T>,
-    width: i32,
-    height: i32,
+    pub width: i32,
+    pub height: i32,
 }
 
 impl<T> Grid<T>
@@ -58,6 +58,14 @@ where
         self.g.iter_mut()
     }
 
+    pub fn iter_points(&self) -> GridPointsIter<T> {
+        GridPointsIter {
+            grid: self,
+            x: 0,
+            y: 0,
+        }
+    }
+
     pub fn row_slice(&self, r: i32) -> &[T] {
         let start: usize = (r * self.width) as usize;
         let end = start + self.width as usize;
@@ -94,6 +102,25 @@ where
         assert!(self.width >= 0);
         let start: usize = i as usize;
         self.g[start..].iter_mut().step_by(self.width as usize)
+    }
+
+    pub fn line(&self, p1: (i32, i32), p2: (i32, i32)) -> GridLineIter<T> {
+        let dx: i32 = (p1.0 - p2.0).abs();
+        let dy: i32 = (p1.1 - p2.1).abs();
+
+        let mut startx = p1.0;
+        let mut starty = p1.1;
+
+        while self.in_bounds(startx, starty) {
+            startx -= dx;
+            starty -= dy;
+        }
+
+        GridLineIter {
+            grid: self,
+            start: (startx + dx, starty + dy),
+            dxy: (dx, dy),
+        }
     }
 
     pub fn transpose(&mut self) -> &mut Self {
@@ -135,7 +162,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for r in self.row_iter() {
             for v in r.iter() {
-                write!(f, "{} ", v)?;
+                write!(f, "{}", v)?;
             }
             write!(f, "\n")?;
         }
@@ -159,6 +186,55 @@ where
             let result = Some(self.grid.row_slice(self.row as i32));
             self.row += 1;
             result
+        } else {
+            None
+        }
+    }
+}
+
+pub struct GridPointsIter<'g, T> {
+    grid: &'g Grid<T>,
+    x: i32,
+    y: i32,
+}
+
+impl<'g, T> Iterator for GridPointsIter<'g, T>
+where
+    T: Clone + Copy,
+{
+    type Item = (i32, i32);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.grid.in_bounds(self.x, self.y) {
+            let result = (self.x, self.y);
+            self.x = (self.x + 1) % self.grid.width;
+            if self.x == 0 {
+                self.y += 1;
+            }
+            Some(result)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct GridLineIter<'g, T> {
+    grid: &'g Grid<T>,
+    start: (i32, i32),
+    dxy: (i32, i32),
+}
+
+impl<'g, T> Iterator for GridLineIter<'g, T>
+where
+    T: Clone + Copy,
+{
+    type Item = (i32, i32);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.grid.in_bounds(self.start.0, self.start.1) {
+            let result = (self.start.0, self.start.1);
+            self.start = (self.start.0 + self.dxy.0, self.start.1 + self.dxy.1);
+            Some(result)
         } else {
             None
         }
@@ -210,26 +286,47 @@ mod tests {
         assert_eq!(expected, result);
 
         //Test walk
-        println!("{}\n", g);
-        g.walk((1, 1), |v, &(x, y)| {
-            println!("{}", v);
-            *v = 0;
-            Some((x - 1, y - 1))
-        });
-        println!("\n{}", g);
+        // println!("{}\n", g);
+        // g.walk((1, 1), |v, &(x, y)| {
+        //     println!("{}", v);
+        //     *v = 0;
+        //     Some((x - 1, y - 1))
+        // });
+        // println!("\n{}", g);
+        //
+        // let v: Vec<Vec<char>> = vec![
+        //     vec!['a', 'b', 'c'],
+        //     vec!['d', 'e', 'f'],
+        //     vec!['g', 'h', 'i'],
+        // ];
+        // let mut g: Grid<char> = Grid::new(v);
+        // println!("{}\n", g);
+        // g.walk((0, 0), |v, &(x, y)| {
+        //     println!("{}", v);
+        //     *v = v.to_ascii_uppercase();
+        //     Some((x + 1, y))
+        // });
+        // println!("\n{}\n", g);
+        //
 
-        let v: Vec<Vec<char>> = vec![
-            vec!['a', 'b', 'c'],
-            vec!['d', 'e', 'f'],
-            vec!['g', 'h', 'i'],
+        //Test iter_points
+        let grid: Grid<i32> = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6]]);
+        let expected: Vec<(i32, i32)> = vec![(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)];
+        assert_eq!(expected, grid.iter_points().collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn test_line_iter() {
+        let g = vec![
+            vec![1, 2, 3, 4],
+            vec![5, 6, 7, 8],
+            vec![9, 10, 11, 12],
+            vec![13, 14, 15, 16],
         ];
-        let mut g: Grid<char> = Grid::new(v);
-        println!("{}\n", g);
-        g.walk((0, 0), |v, &(x, y)| {
-            println!("{}", v);
-            *v = v.to_ascii_uppercase();
-            Some((x + 1, y))
-        });
-        println!("\n{}\n", g);
+        let grid: Grid<i32> = Grid::new(g);
+
+        let expected = vec![(0, 0), (1, 1), (2, 2), (3, 3)];
+        let result: Vec<(i32, i32)> = grid.line((1, 1), (2, 2)).collect();
+        assert_eq!(expected, result);
     }
 }
