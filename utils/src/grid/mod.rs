@@ -3,6 +3,7 @@ use core::slice::{Iter, IterMut};
 use std::fmt;
 use std::marker::Copy;
 
+#[derive(Clone)]
 pub struct Grid<T> {
     g: Vec<T>,
     pub width: i32,
@@ -105,20 +106,19 @@ where
     }
 
     pub fn line(&self, p1: (i32, i32), p2: (i32, i32)) -> GridLineIter<T> {
-        let dx: i32 = (p1.0 - p2.0).abs();
-        let dy: i32 = (p1.1 - p2.1).abs();
+        let dx: i32 = p1.0 - p2.0;
+        let dy: i32 = p1.1 - p2.1;
 
-        let mut startx = p1.0;
-        let mut starty = p1.1;
+        let (mut startx, mut starty) = if p1.0 < p2.0 { p1 } else { p2 };
 
         while self.in_bounds(startx, starty) {
-            startx -= dx;
-            starty -= dy;
+            startx += dx;
+            starty += dy;
         }
 
         GridLineIter {
             grid: self,
-            start: (startx + dx, starty + dy),
+            start: (startx - dx, starty - dy),
             dxy: (dx, dy),
         }
     }
@@ -233,7 +233,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.grid.in_bounds(self.start.0, self.start.1) {
             let result = (self.start.0, self.start.1);
-            self.start = (self.start.0 + self.dxy.0, self.start.1 + self.dxy.1);
+            self.start = (self.start.0 - self.dxy.0, self.start.1 - self.dxy.1);
             Some(result)
         } else {
             None
@@ -327,6 +327,10 @@ mod tests {
 
         let expected = vec![(0, 0), (1, 1), (2, 2), (3, 3)];
         let result: Vec<(i32, i32)> = grid.line((1, 1), (2, 2)).collect();
+        assert_eq!(expected, result);
+
+        let expected = vec![(0, 3), (1, 2), (2, 1), (3, 0)];
+        let result: Vec<(i32, i32)> = grid.line((1, 2), (2, 1)).collect();
         assert_eq!(expected, result);
     }
 }

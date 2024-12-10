@@ -91,6 +91,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "day9"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "rustc-hash",
+ "tinyparse",
+ "utils",
+]
+
+[[package]]
 name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

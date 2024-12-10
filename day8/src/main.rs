@@ -38,7 +38,6 @@ fn part1(src: &str) -> Result<i64, Error> {
         }
     }
 
-    //let mut total = 0;
     let mut antinodes: FxHashSet<(i32, i32)> = FxHashSet::default();
 
     for (_, ats) in &ant_map {
@@ -66,10 +65,12 @@ fn part2(src: &str) -> Result<i64, Error> {
 
     //find antennas
     let mut ant_map: FxHashMap<char, Vec<(i32, i32)>> = FxHashMap::default();
+    let mut ant_count: usize = 0;
 
     for (x, y) in grid.iter_points() {
         if grid.at(x, y) != Some(&'.') {
             let a = grid.at(x, y).unwrap();
+            ant_count += 1;
             ant_map.entry(*a).or_default().push((x, y));
         }
     }
@@ -80,7 +81,7 @@ fn part2(src: &str) -> Result<i64, Error> {
         for cs in ats.iter().combinations(2) {
             if let [a1, a2] = cs[..] {
                 for pt in grid.line(*a1, *a2) {
-                    if pt != *a1 && pt != *a2 {
+                    if pt != *a1 && pt != *a2 && grid.at(pt.0, pt.1) == Some(&'.') {
                         antinodes.insert(pt);
                     }
                 }
@@ -88,7 +89,7 @@ fn part2(src: &str) -> Result<i64, Error> {
         }
     }
 
-    Ok(antinodes.len() as i64)
+    Ok((ant_count + antinodes.len()) as i64)
 }
 
 #[cfg(test)]
