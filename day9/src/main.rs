@@ -4,7 +4,7 @@ use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
 fn main() {
-    let input = include_str!("../../input/day9/input.txt");
+    let input = include_str!("../../input/day9/input2.txt");
 
     println!("part 1: {}", part1(input).unwrap());
     println!("part 2: {}", part2(input).unwrap());
