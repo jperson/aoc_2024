@@ -46,6 +46,23 @@ fn blink(n: i64, steps: i64, end: i64, t: &mut FxHashMap<(i64, i64), i64>) -> i6
     }
 }
 
+fn blink2(t: &mut FxHashMap<i64, i64>) {
+    let mut tn: FxHashMap<i64, i64> = FxHashMap::default();
+
+    for (s, c) in t.iter() {
+        match s {
+            0 => *tn.entry(1).or_default() += c,
+            _ if (1 + s.ilog10() as i64) % 2 == 0 => {
+                let (l, r) = split_num(*s);
+                *tn.entry(l).or_default() += c;
+                *tn.entry(r).or_default() += c;
+            }
+            _ => *tn.entry(s * 2024).or_default() += c,
+        }
+    }
+    std::mem::swap(t, &mut tn);
+}
+
 fn part1(src: &str) -> Result<i64, Error> {
     let stones = parse_input(src);
     let mut table: FxHashMap<(i64, i64), i64> = FxHashMap::default();
@@ -60,14 +77,22 @@ fn part1(src: &str) -> Result<i64, Error> {
 
 fn part2(src: &str) -> Result<i64, Error> {
     let stones = parse_input(src);
-    let mut table: FxHashMap<(i64, i64), i64> = FxHashMap::default();
-    let mut total: i64 = 0;
-
+    // let mut table: FxHashMap<(i64, i64), i64> = FxHashMap::default();
+    // let mut total: i64 = 0;
+    //
+    // for s in stones {
+    //     total += blink(s, 0, 75, &mut table)
+    // }
+    // Ok(total)
+    let mut t: FxHashMap<i64, i64> = FxHashMap::default();
     for s in stones {
-        total += blink(s, 0, 75, &mut table)
+        *t.entry(s).or_default() += 1;
+    }
+    for _ in 0..75 {
+        blink2(&mut t);
     }
 
-    Ok(total)
+    Ok(t.values().sum())
 }
 
 #[cfg(test)]
