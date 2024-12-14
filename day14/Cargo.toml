@@ -1,0 +1,14 @@
+[package]
+name = "day14"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+itertools = "0.13.0"
+rustc-hash = "2.1.0"
+utils = { path = "../utils" }
+tinyparse = { path = "../tinyparse" }
+num = "0.4.3"
+nalgebra = "0.33.2"
+

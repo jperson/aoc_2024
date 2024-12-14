@@ -23,6 +23,14 @@ where
         }
     }
 
+    pub fn from_vec(v: &Vec<T>, w: i32, h: i32) -> Self {
+        Self {
+            width: w,
+            height: h,
+            g: v.to_vec(),
+        }
+    }
+
     pub fn size(&self) -> usize {
         (self.width * self.height) as usize
     }

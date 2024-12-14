@@ -1,6 +1,8 @@
+use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::str::FromStr;
 
 use itertools::traits::HomogeneousTuple;
 use itertools::Itertools;
@@ -13,6 +15,22 @@ pub fn read_lines(f: &str) -> Result<Vec<String>, std::io::Error> {
         .lines()
         .into_iter()
         .collect::<Result<Vec<String>, std::io::Error>>()
+}
+
+pub fn nums<T>(l: &str) -> Vec<T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    l.split(",")
+        .map(|s| {
+            s.chars()
+                .filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
+                .collect::<String>()
+                .parse::<T>()
+                .expect("failed to parse i64")
+        })
+        .collect::<Vec<T>>()
 }
 
 pub fn split_lines_ws<'a, T>(lines: &'a Vec<String>) -> Option<Vec<T>>
@@ -98,5 +116,24 @@ mod tests {
         let result = remove_ith(&vs);
 
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_nums() {
+        let s = "Button A: X+94, Y+34";
+        let expected: [i64; 2] = [94, 34];
+        assert_eq!(expected, &nums(s)[..]);
+
+        let s = "Prize: X=8400, Y=5400";
+        let expected: [i64; 2] = [8400, 5400];
+        assert_eq!(expected, &nums(s)[..]);
+
+        let s = "Prize: X=84.25, Y=54.55";
+        let expected: [f64; 2] = [84.25, 54.55];
+        assert_eq!(expected, &nums(s)[..]);
+
+        let s = "Prize: X=84.25, Y=54.55";
+        let expected: [i64; 2] = [84, 54];
+        assert_eq!(expected, &nums(s)[..]);
     }
 }
