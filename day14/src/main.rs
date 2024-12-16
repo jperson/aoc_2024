@@ -48,22 +48,19 @@ fn part1(src: &str) -> Result<i64, Error> {
     let mut robots = parse_input(src);
 
     for r in robots.iter_mut() {
-        r.x += if r.vx < 0 { WIDTH + r.vx } else { r.vx } * 100;
-        r.x %= WIDTH;
-
-        r.y += if r.vy < 0 { HEIGHT + r.vy } else { r.vy } * 100;
-        r.y %= HEIGHT;
+        r.x = (r.x + 100 * r.vx).rem_euclid(WIDTH);
+        r.y = (r.y + 100 * r.vy).rem_euclid(HEIGHT);
     }
 
     let mut quads: [i64; 4] = [0, 0, 0, 0];
     for r in robots {
-        if r.x < (WIDTH / 2) && r.y < (HEIGHT / 2) {
+        if r.x < ((WIDTH - 1) / 2) && r.y < ((HEIGHT - 1) / 2) {
             quads[0] += 1;
-        } else if r.x > (WIDTH / 2) && r.y < (HEIGHT / 2) {
+        } else if r.x > ((WIDTH - 1) / 2) && r.y < ((HEIGHT - 1) / 2) {
             quads[1] += 1;
-        } else if r.x < (WIDTH / 2) && r.y > (HEIGHT / 2) {
+        } else if r.x < ((WIDTH - 1) / 2) && r.y > ((HEIGHT - 1) / 2) {
             quads[2] += 1;
-        } else if r.x > (WIDTH / 2) && r.y > (HEIGHT / 2) {
+        } else if r.x > ((WIDTH - 1) / 2) && r.y > ((HEIGHT - 1) / 2) {
             quads[3] += 1;
         }
     }
@@ -138,11 +135,8 @@ fn part2(src: &str) -> Result<i64, Error> {
                 *v = ' ';
             }
 
-            r.x += if r.vx < 0 { WIDTH + r.vx } else { r.vx };
-            r.x %= WIDTH;
-
-            r.y += if r.vy < 0 { HEIGHT + r.vy } else { r.vy };
-            r.y %= HEIGHT;
+            r.x = (r.x + r.vx).rem_euclid(WIDTH);
+            r.y = (r.y + r.vy).rem_euclid(HEIGHT);
 
             let v = grid.at_mut(r.x as i32, r.y as i32);
             *v = '#';
@@ -176,7 +170,7 @@ p=7,3 v=-1,2
 p=2,4 v=2,-3
 p=9,5 v=-3,-3";
 
-        //assert_eq!(12, part1(src).unwrap());
+        assert_eq!(12, part1(src).unwrap());
     }
 
     #[test]

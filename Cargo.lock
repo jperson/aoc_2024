@@ -98,6 +98,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "day15"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nalgebra",
+ "num",
+ "rustc-hash",
+ "tinyparse",
+ "utils",
+]
+
+[[package]]
+name = "day16"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nalgebra",
+ "num",
+ "rustc-hash",
+ "tinyparse",
+ "utils",
+]
+
+[[package]]
 name = "day2"
 version = "0.1.0"
 dependencies = [
