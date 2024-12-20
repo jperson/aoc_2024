@@ -132,8 +132,8 @@ mod tests {
         let expected: [f64; 2] = [84.25, 54.55];
         assert_eq!(expected, &nums(s)[..]);
 
-        let s = "Prize: X=84.25, Y=54.55";
-        let expected: [i64; 2] = [84, 54];
+        let s = "Prize: X=-84.25, Y=54.55";
+        let expected: [f64; 2] = [-84.25, 54.55];
         assert_eq!(expected, &nums(s)[..]);
     }
 }

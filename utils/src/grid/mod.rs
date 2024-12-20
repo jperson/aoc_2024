@@ -2,6 +2,7 @@ use core::iter::StepBy;
 use core::slice::{Iter, IterMut};
 use std::fmt;
 use std::marker::Copy;
+use std::ops::{Index, IndexMut};
 
 #[derive(Clone)]
 pub struct Grid<T> {
@@ -14,6 +15,7 @@ impl<T> Grid<T>
 where
     T: Clone,
     T: Copy,
+    T: PartialEq<T>,
 {
     pub fn new(g: Vec<Vec<T>>) -> Self {
         Self {
@@ -28,6 +30,21 @@ where
             width: w,
             height: h,
             g: v.to_vec(),
+        }
+    }
+
+    pub fn empty(w: i32, h: i32) -> Self {
+        let v: Vec<T> = Vec::with_capacity((w as usize) * (h as usize));
+        Self {
+            width: w,
+            height: h,
+            g: v,
+        }
+    }
+
+    pub fn fill(&mut self, v: &T) {
+        for _ in 0..(self.width * self.height) {
+            self.g.push(*v);
         }
     }
 
@@ -147,25 +164,21 @@ where
         self
     }
 
-    pub fn walk<F>(&mut self, mut start: (i32, i32), f: F)
-    where
-        F: Fn(&mut T, &(i32, i32)) -> Option<(i32, i32)>,
-    {
-        let mut val: &mut T = self.at_mut(start.0, start.1);
-        while let Some(coords) = f(val, &start) {
-            if self.in_bounds(coords.0, coords.1) {
-                val = self.at_mut(coords.0, coords.1);
-                start = coords;
-            } else {
-                break;
+    pub fn find(&self, t: &T) -> Option<(usize, usize)> {
+        for (i, v) in self.g.iter().enumerate() {
+            if *v == *t {
+                let x = i % self.width as usize;
+                let y = i / self.height as usize;
+                return Some((x, y));
             }
         }
+        return None;
     }
 }
 
 impl<T> fmt::Display for Grid<T>
 where
-    T: Clone + Copy + fmt::Display,
+    T: Clone + Copy + fmt::Display + PartialEq<T>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for r in self.row_iter() {
@@ -185,7 +198,7 @@ pub struct GridRowIterator<'g, T> {
 
 impl<'g, T> Iterator for GridRowIterator<'g, T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + PartialEq<T>,
 {
     type Item = &'g [T];
 
@@ -208,7 +221,7 @@ pub struct GridPointsIter<'g, T> {
 
 impl<'g, T> Iterator for GridPointsIter<'g, T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + PartialEq<T>,
 {
     type Item = (i32, i32);
 
@@ -234,7 +247,7 @@ pub struct GridLineIter<'g, T> {
 
 impl<'g, T> Iterator for GridLineIter<'g, T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + PartialEq<T>,
 {
     type Item = (i32, i32);
 
@@ -246,6 +259,42 @@ where
         } else {
             None
         }
+    }
+}
+
+impl<T> Index<(usize, usize)> for Grid<T>
+where
+    T: Clone + Copy + PartialEq<T>,
+{
+    type Output = T;
+
+    #[inline]
+    fn index(&self, (x, y): (usize, usize)) -> &T {
+        assert!(
+            self.in_bounds(x as i32, y as i32),
+            "out of bound: ({x},{y} out of ({},{}))",
+            self.width,
+            self.height
+        );
+        let i = (x as usize) + (y as usize) * self.width as usize;
+        &self.g[i]
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for Grid<T>
+where
+    T: Clone + Copy + PartialEq<T>,
+{
+    #[inline]
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut T {
+        assert!(
+            self.in_bounds(x as i32, y as i32),
+            "out of bound: ({x},{y} out of ({},{}))",
+            self.width,
+            self.height
+        );
+        let i = (x as usize) + (y as usize) * self.width as usize;
+        &mut self.g[i]
     }
 }
 
@@ -293,30 +342,6 @@ mod tests {
         let result: Vec<i32> = g.col(2).cloned().collect::<Vec<_>>();
         assert_eq!(expected, result);
 
-        //Test walk
-        // println!("{}\n", g);
-        // g.walk((1, 1), |v, &(x, y)| {
-        //     println!("{}", v);
-        //     *v = 0;
-        //     Some((x - 1, y - 1))
-        // });
-        // println!("\n{}", g);
-        //
-        // let v: Vec<Vec<char>> = vec![
-        //     vec!['a', 'b', 'c'],
-        //     vec!['d', 'e', 'f'],
-        //     vec!['g', 'h', 'i'],
-        // ];
-        // let mut g: Grid<char> = Grid::new(v);
-        // println!("{}\n", g);
-        // g.walk((0, 0), |v, &(x, y)| {
-        //     println!("{}", v);
-        //     *v = v.to_ascii_uppercase();
-        //     Some((x + 1, y))
-        // });
-        // println!("\n{}\n", g);
-        //
-
         //Test iter_points
         let grid: Grid<i32> = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6]]);
         let expected: Vec<(i32, i32)> = vec![(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)];
@@ -340,5 +365,34 @@ mod tests {
         let expected = vec![(0, 3), (1, 2), (2, 1), (3, 0)];
         let result: Vec<(i32, i32)> = grid.line((1, 2), (2, 1)).collect();
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_index() {
+        let g = vec![
+            vec![1, 2, 3, 4],
+            vec![5, 6, 7, 8],
+            vec![9, 10, 11, 12],
+            vec![13, 14, 15, 16],
+        ];
+        let grid: Grid<i32> = Grid::new(g);
+
+        assert_eq!(11, grid[(2, 2)]);
+        assert_eq!(6, grid[(1, 1)]);
+    }
+
+    #[test]
+    fn test_find() {
+        let g = vec![vec![1, 2, 3], vec![5, 6, 7], vec![9, 10, 11]];
+        let grid: Grid<i32> = Grid::new(g);
+
+        assert_eq!(Some((1, 1)), grid.find(&6));
+    }
+
+    #[test]
+    fn test_empty_fill() {
+        let mut g: Grid<char> = Grid::empty(3, 3);
+        g.fill(&'.');
+        println!("{}", g);
     }
 }
