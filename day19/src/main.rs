@@ -5,8 +5,8 @@ use rustc_hash::{FxHashMap, FxHashSet};
 fn main() {
     let input = include_str!("../../input/day19/input.txt");
 
-    println!("part 1: {}", part1(input).unwrap());
-    println!("part 2: {}", part2(input).unwrap());
+    //println!("part 1: {}", part1(input).unwrap());
+    println!("part 2: {}", part2_memo(input).unwrap());
 }
 
 fn parse_input<'a>(src: &'a str) -> (Vec<&'a str>, Vec<&'a str>) {
