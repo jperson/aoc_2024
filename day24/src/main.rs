@@ -279,5 +279,3 @@ x05 AND y05 -> z00";
         assert_eq!(0, part2(src).unwrap());
     }
 }
-
-//2472 too high
